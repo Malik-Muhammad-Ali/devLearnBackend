@@ -19,10 +19,11 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: true,
+      select: false,
     },
     profilePic: {
       type: String,
-      default: "/assets/profile.png",
+      default: null,
     },
     stats: {
       type: Object,

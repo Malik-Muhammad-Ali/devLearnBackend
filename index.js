@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 
 // Custom modules
-const connect = require("./database/conn");
+const connect = require("./config/dbConfig");
 const userRoutes = require("./routes/userRoutes");
 
 const app = express();

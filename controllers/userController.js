@@ -1,6 +1,9 @@
 const bcrypt = require("bcryptjs");
 const User = require("../database/models/userModel");
 const { validationResult } = require("express-validator");
+const jwt = require("jsonwebtoken");
+const cloudinary = require("../config/cloudinaryConfig");
+const JWT_SECRET = "ali";
 
 async function signUp(req, res) {
   const errors = validationResult(req);
@@ -39,4 +42,102 @@ async function signUp(req, res) {
   }
 }
 
-module.exports = { signUp };
+async function signIn(req, res) {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email }).select("+password").exec();
+    if (!user) {
+      return res.status(400).json({ error: "Invalid email or password" });
+    }
+    if (!(await bcrypt.compare(password, user.password))) {
+      return res.status(400).json({ error: "Invalid email or password" });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    res.status(200).json({
+      message: "Sign in successful",
+      token,
+      user: {
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        profilePic: user.profilePic,
+        stats: user.stats,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+async function updateProfile(req, res) {
+  const userId = req.user.userId;
+  const { name, username, previousPassword, password } = req.body;
+
+  try {
+    // Find user
+    const user = await User.findById(userId).select("+password");
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Verify Previous Password
+    if (
+      previousPassword &&
+      !(await bcrypt.compare(previousPassword, user.password))
+    ) {
+      return res.status(400).json({ error: "Previous password is incorrect" });
+    }
+
+    // Handle Profile Picture Upload to Cloudinary
+    let profilePicUrl = user.profilePic;
+    if (req.file) {
+      const result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "profile_pictures" },
+          (error, uploadResult) => {
+            if (error) reject(error);
+            else resolve(uploadResult.secure_url);
+          }
+        );
+        uploadStream.end(req.file.buffer);
+      });
+
+      profilePicUrl = result;
+    }
+
+    // Update fields
+    user.name = name || user.name;
+    user.username = username || user.username;
+    if (password) user.password = await bcrypt.hash(password, 10);
+    user.profilePic = profilePicUrl;
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: {
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        profilePic: user.profilePic,
+      },
+    });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+module.exports = { signUp, signIn, updateProfile };
