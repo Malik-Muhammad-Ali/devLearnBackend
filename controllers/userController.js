@@ -70,6 +70,7 @@ async function signIn(req, res) {
       message: "Sign in successful",
       token,
       user: {
+        _id: user._id,
         name: user.name,
         email: user.email,
         username: user.username,

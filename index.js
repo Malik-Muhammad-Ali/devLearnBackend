@@ -4,6 +4,7 @@ const cors = require("cors");
 // Custom modules
 const connect = require("./config/dbConfig");
 const userRoutes = require("./routes/userRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const app = express();
 const PORT = 6001;
@@ -17,6 +18,7 @@ app.use(express.static("public"));
 
 // Routes
 app.use("/api/user", userRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World");

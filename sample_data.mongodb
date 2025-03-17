@@ -1,0 +1,125 @@
+// Switch to your database
+use quiz_app_db;
+
+// Real user ID
+const userId = ObjectId('67be3627dbc20f1ae9344cf5');
+
+// Delete existing quizzes for this user (if any)
+db.quizzes.deleteMany({ userId: userId });
+
+// Insert sample quiz data
+db.quizzes.insertMany([
+  {
+    title: "JavaScript Basics",
+    score: 85,
+    passed: true,
+    createdAt: new Date("2025-03-17T12:00:00Z"),
+    userId: userId
+  },
+  {
+    title: "Advanced JavaScript",
+    score: 92,
+    passed: true,
+    createdAt: new Date("2025-03-17T12:30:00Z"),
+    userId: userId
+  },
+  {
+    title: "React Fundamentals",
+    score: 78,
+    passed: true,
+    createdAt: new Date("2025-03-17T13:00:00Z"),
+    userId: userId
+  },
+  {
+    title: "TypeScript Basics",
+    score: 65,
+    passed: false,
+    createdAt: new Date("2025-03-17T13:30:00Z"),
+    userId: userId
+  },
+  {
+    title: "Node.js Essentials",
+    score: 88,
+    passed: true,
+    createdAt: new Date("2025-03-17T14:00:00Z"),
+    userId: userId
+  },
+  {
+    title: "MongoDB Basics",
+    score: 95,
+    passed: true,
+    createdAt: new Date("2025-03-17T14:30:00Z"),
+    userId: userId
+  },
+  {
+    title: "Express.js",
+    score: 82,
+    passed: true,
+    createdAt: new Date("2025-03-17T15:00:00Z"),
+    userId: userId
+  },
+  {
+    title: "GraphQL Introduction",
+    score: 60,
+    passed: false,
+    createdAt: new Date("2025-03-17T15:30:00Z"),
+    userId: userId
+  },
+  {
+    title: "React Hooks",
+    score: 98,
+    passed: true,
+    createdAt: new Date("2025-03-17T16:00:00Z"),
+    userId: userId
+  },
+  {
+    title: "Redux State Management",
+    score: 88,
+    passed: true,
+    createdAt: new Date("2025-03-17T16:30:00Z"),
+    userId: userId
+  },
+  {
+    title: "Testing with Jest",
+    score: 75,
+    passed: true,
+    createdAt: new Date("2025-03-17T17:00:00Z"),
+    userId: userId
+  },
+  {
+    title: "CI/CD Basics",
+    score: 68,
+    passed: false,
+    createdAt: new Date("2025-03-17T17:30:00Z"),
+    userId: userId
+  }
+]);
+
+// Verify the data
+db.quizzes.find({ userId: userId }).sort({ createdAt: -1 });
+
+// Get dashboard stats (you can run these queries to verify the data)
+// Total quizzes
+db.quizzes.countDocuments({ userId: userId });
+
+// Passed quizzes
+db.quizzes.countDocuments({ userId: userId, passed: true });
+
+// Failed quizzes
+db.quizzes.countDocuments({ userId: userId, passed: false });
+
+// Average score and best score
+db.quizzes.aggregate([
+  { $match: { userId: userId } },
+  {
+    $group: {
+      _id: null,
+      averageScore: { $avg: '$score' },
+      bestScore: { $max: '$score' }
+    }
+  }
+]);
+
+// Get performance trend (last 12 quizzes)
+db.quizzes.find({ userId: userId }).sort({ createdAt: -1 })
+  .limit(12);
