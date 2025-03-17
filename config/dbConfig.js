@@ -1,8 +1,11 @@
 const mongoose = require("mongoose");
 
+const uri = "mongodb+srv://muhammadali:AliXGoku@cluster0.agnol.mongodb.net/devLearnDB?retryWrites=true&w=majority&appName=Cluster0";
+const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
+
 const connect = async () => {
   try {
-    const conn = await mongoose.connect("mongodb://127.0.0.1:27017/devLearnDB");
+    const conn = await mongoose.connect(uri, clientOptions);
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {

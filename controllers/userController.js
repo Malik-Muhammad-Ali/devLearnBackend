@@ -4,6 +4,7 @@ const { validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("../config/cloudinaryConfig");
 const JWT_SECRET = "ali";
+const fs = require("fs");
 
 async function signUp(req, res) {
   const errors = validationResult(req);
@@ -87,10 +88,12 @@ async function signIn(req, res) {
 async function updateProfile(req, res) {
   const userId = req.user.userId;
   const { name, username, previousPassword, password } = req.body;
+  // console.log(name, username, previousPassword, password, userId)
 
   try {
     const user = await User.findById(userId).select("+password");
     if (!user) return res.status(404).json({ error: "User not found" });
+    // console.log(user)
 
     // Verify Previous Password
     if (
@@ -102,19 +105,21 @@ async function updateProfile(req, res) {
 
     // Handle Profile Picture Upload to Cloudinary
     let profilePicUrl = user.profilePic;
+    console.log(req.file)
     if (req.file) {
-      const result = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          { folder: "profile_pictures" },
-          (error, uploadResult) => {
-            if (error) reject(error);
-            else resolve(uploadResult.secure_url);
-          }
-        );
-        uploadStream.end(req.file.buffer);
-      });
-
-      profilePicUrl = result;
+      try {
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: "profile_pictures",
+        });
+    
+        profilePicUrl = result.secure_url;
+    
+        // Delete temporary file after upload
+        fs.unlinkSync(req.file.path);
+      } catch (error) {
+        console.error("Cloudinary Upload Error:", error);
+        return res.status(500).json({ error: "Failed to upload image" });
+      }
     }
 
     // Update fields
