@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
+const uri = process.env.MONGODB_URI;
 
-const uri = "mongodb+srv://muhammadali:AliXGoku@cluster0.agnol.mongodb.net/devLearnDB?retryWrites=true&w=majority&appName=Cluster0";
 const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
 
 const connect = async () => {
