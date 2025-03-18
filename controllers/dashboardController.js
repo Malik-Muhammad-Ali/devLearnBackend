@@ -19,8 +19,10 @@ const getDashboardStats = async (req, res) => {
 
     // Get basic quiz statistics
     const totalQuizzes = await Quiz.countDocuments({ userId: userObjectId });
-    const passedQuizzes = await Quiz.countDocuments({ userId: userObjectId, passed: true });
-    const failedQuizzes = await Quiz.countDocuments({ userId: userObjectId, passed: false });
+    const attemptedQuizzes = await Quiz.countDocuments({ userId: userObjectId, isAttempted: true });
+    const notAttemptedQuizzes = await Quiz.countDocuments({ userId: userObjectId, isAttempted: false });
+    const passedQuizzes = await Quiz.countDocuments({ userId: userObjectId, passed: true, isAttempted: true });
+    const failedQuizzes = await Quiz.countDocuments({ userId: userObjectId, passed: false, isAttempted: true });
 
     // Calculate average score
     const scoreStats = await Quiz.aggregate([
@@ -61,6 +63,8 @@ const getDashboardStats = async (req, res) => {
 
     const stats = {
       totalQuizzes,
+      attemptedQuizzes,
+      notAttemptedQuizzes,
       passedQuizzes,
       failedQuizzes,
       averageScore: scoreStats[0]?.averageScore.toFixed(1) || 0,
